@@ -35,6 +35,8 @@ class VanillaSystem {
           if (line.substring(0, 3).equals("ADM") || line.substring(0, 3).equals("PSY") || line.substring(0, 3).equals("MAT")) {  //  check for course code beginning
           //  check if english course
           if (Character.getNumericValue(line.charAt(5)) < 5) {  //  english section
+            if (rawDocuments.size() > 0)
+              System.out.println(rawDocuments.get(rawDocuments.size()-1).words.size());  //  print length of previous document
             rawDocuments.add(new RawDocument(rawDocuments.size(), line.substring(0, 8)));
             french = false;  //  set french flag to false
           }
@@ -48,6 +50,8 @@ class VanillaSystem {
         if (!french) {
           //  cut on spaces
           String[] words = line.split(" ");
+          //  word/posting object
+          ArrayList<RawDocumentWord> wordPostings = new ArrayList<RawDocumentWord>();
           //  cycle through words
           for (int i = 0; i < words.length; i++) {
             if (words[i].length() > 0) {
@@ -55,6 +59,10 @@ class VanillaSystem {
               words[i] = cleanPunctuation(words[i]);  //  remove punctuation from a word
               //  System.out.println(words[i]);
               
+              //  now that all punctuation has bben trimmed, save to wordPostings to preserve posting (as positions will be messed up during stemming)
+              wordPostings.add(new RawDocumentWord(words[i], i));
+              
+              //  basic phrase recognition for course codes
               //  check if the word is a course code; if so, check if next is a number and add as phrase; otherwise, disregard
               boolean courseCode = false;
               if (words[i].length() == 3) {  //  minimum length for course code
@@ -62,11 +70,13 @@ class VanillaSystem {
                   //  check if following word is there
                   if (words.length > i+1)
                     //  clean next word
+              words[i+1] = cleanPunctuation(words[i+1]);
                     //  check if next word is a number
                     if (isNumber(words[i+1])) {
                     courseCode = true;  //  set course code flag so as to know not to stem
                     //  add to current word for phrase treatment
                     words[i] += words[i+1];
+                    wordPostings.get(i).word += words[i+1];  //  modify the word posting as well
                   }
                 }
               }
@@ -75,13 +85,35 @@ class VanillaSystem {
               if (!courseCode) {
                 
                 //  DO STEMMING
+                /*
+                 Stemming rules:
+                 Every word to be stemmed is duplicated, meaning that, in addition to the base word, a new RawDocumentWord is saved to wordPostings with the same position
+                 -s -> -
+                 -es -> -e
+                 -ing -> -
+                 -ing -> -e
+                 -tion -> -te
+                 -tion -> -e
+                 -ation -> -e
+                 -ers -> -e
+                 -ers -> -
+                 -er -> -e
+                 -er -> -
+                 -ly -> -
+                 */
+                String[] stemmingRules = {"s", "", "es", "", "ing", "", "ing", "e", "tion", "te", "tion", "e", "ation", "e", "ers", "e", "ers", "", "er", "e", "er", "", "ly", ""};
                 
+                for (int j = 0; j < stemmingRules.length/2; j++) {
+                  if (words[i].length() > stemmingRules[j].length())  //  check if within length
+                    if (words[i].substring(words[i].length()-stemmingRules[j].length(), words[i].length()).equals(stemmingRules[j*2]))  //  check for matching ending
+                    wordPostings.add(new RawDocumentWord(words[i].substring(0, words[i].length()-stemmingRules[j].length())+stemmingRules[j*2+1], i));  //  add new wordPosting with same posting position
+                }
               }
               
             }
           }
           //  send off list of words to raw document
-          rawDocuments.get(rawDocuments.size()-1).addWords(words);
+          rawDocuments.get(rawDocuments.size()-1).addWords(wordPostings);
           //  send off words to dictionary to be added
         }
         
@@ -151,7 +183,7 @@ class VanillaSystem {
 class RawDocument {
   int id;
   String title;
-  ArrayList<String> words = new ArrayList<String>();
+  ArrayList<RawDocumentWord> words = new ArrayList<RawDocumentWord>();
   
   RawDocument(int i, String t) {
     id = i;
@@ -159,12 +191,27 @@ class RawDocument {
     System.out.println("Creating course: " + t);
   }
   
-  void addWords(ArrayList<String> w) {
-    for (String s : w)
-      words.add(s);
+  void addWords(ArrayList<RawDocumentWord> w) {
+    for (RawDocumentWord word : w)
+      words.add(word);
+    for (RawDocumentWord word : words)
+    System.out.println(word.word);
   }
-  void addWords(String[] w) {
-    for (String s : w)
-      words.add(s);
+  void addWords(RawDocumentWord[] w) {
+    for (RawDocumentWord word : w)
+      words.add(word);
+  }
+}
+
+//  simply stores the word and a posting
+//  required as the stemming duplicates the word, so the position cannot be reliably used for posting position
+class RawDocumentWord {
+  
+  String word;
+  int post;
+  
+  RawDocumentWord(String w, int p) {
+    word = w;
+    post = p;
   }
 }
