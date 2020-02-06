@@ -1,0 +1,7 @@
+//  for query processing
+class QueryProcessing {
+  
+  void processQuery(String query) {
+    
+  }
+}
