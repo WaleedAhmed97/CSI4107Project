@@ -11,10 +11,42 @@ class VanillaSystem {
   static QueryProcessing queryProcessing = new QueryProcessing();
   
   
+    //  all documents
+   static ProperDocument[] documents;  //  to be initialized after the construction and processing of raw documents
+    
+    
   
   static char[] punctuation = {'"', '\'', ',', '.', '-', '(', ')', '{', '}', '\\', '/', '=', '+', ';', ':', '|'};  //  used for punctuation removal
   
   static Dictionary dictionary;
+  
+  
+  /*
+   Stemming rules:
+   Every word to be stemmed is duplicated, meaning that, in addition to the base word, a new RawDocumentWord is saved to wordPostings with the same position
+   -s -> -
+   -es -> -e
+   -ies -> -y
+   -ing -> -
+   -ing -> -e
+   -tion -> -te
+   -tion -> -e
+   -ation -> -e
+   -ers -> -e
+   -ers -> -
+   -er -> -e
+   -er -> -
+   -ly -> -
+   -ed -> -e
+   */
+  static String[] stemmingRules = {"s", "", "es", "", "ies", "y", "ing", "", "ing", "e", "tion", "te", "tion", "e", "ation", "e", "ers", "e", "ers", "", "er", "e", "er", "", "ly", "", "ed", "e"};
+  
+  
+  //  different trackers
+  boolean caseFolding = true;
+  boolean stemming = true;
+  
+  
   
   public static void main(String args[]) {
     System.out.println("Program test");
@@ -25,8 +57,30 @@ class VanillaSystem {
     queryProcessing.processQuery("test AND (this OR that)");
     
     
-    //  all documents
-    ProperDocument[] documents;  //  to be initialized after the construction and processing of raw documents
+    createDictionary();
+    
+    
+    //  testing time
+    int[] results;
+    results = searchWithQuery("effectively AND NOT baccalaureate");
+    for (int i : results)
+      System.out.println(i);
+    results = searchWithQuery("effectively AND baccalaureate");
+    for (int i : results)
+      System.out.println(i);
+    results = searchWithQuery("effectively");
+    for (int i : results) {
+      System.out.println(i);
+      documents[i].displayDocument();
+    }
+    results = searchWithQuery("student AND NOT MAT");
+    for (int i : results)
+      System.out.println(i);
+  }
+  
+  public static void createDictionary() {
+    
+    
     //  dictionary
     dictionary = new Dictionary();
     
@@ -100,27 +154,7 @@ class VanillaSystem {
               //  else, stem
               if (!courseCode) {
                 
-                //  DO STEMMING
-                /*
-                 Stemming rules:
-                 Every word to be stemmed is duplicated, meaning that, in addition to the base word, a new RawDocumentWord is saved to wordPostings with the same position
-                 -s -> -
-                 -es -> -e
-                 -ies -> -y
-                 -ing -> -
-                 -ing -> -e
-                 -tion -> -te
-                 -tion -> -e
-                 -ation -> -e
-                 -ers -> -e
-                 -ers -> -
-                 -er -> -e
-                 -er -> -
-                 -ly -> -
-                 -ed -> -e
-                 */
-                String[] stemmingRules = {"s", "", "es", "", "ies", "y", "ing", "", "ing", "e", "tion", "te", "tion", "e", "ation", "e", "ers", "e", "ers", "", "er", "e", "er", "", "ly", "", "ed", "e"};
-                
+                //  stemming
                 for (int j = 0; j < stemmingRules.length; j += 2) {
                   if (words[i].length() > stemmingRules[j].length())  //  check if within length
                     if (words[i].substring(words[i].length()-stemmingRules[j].length(), words[i].length()).equals(stemmingRules[j]))  //  check for matching ending
@@ -136,6 +170,9 @@ class VanillaSystem {
           }
           //  send off list of words to raw document
           rawDocuments.get(rawDocuments.size()-1).addWords(wordPostings);
+          
+          //  add line to document
+          rawDocuments.get(rawDocuments.size()-1).addLine(line);
           
           //  add length to position counter
           positionCounter += words.length;
@@ -173,21 +210,6 @@ class VanillaSystem {
       System.out.println("Did not work");
       System.out.println(e);
     }
-    
-    
-    
-    //  testing time
-    int[] results;
-    results = searchWithQuery("effectively AND NOT baccalaureate");
-    for (int i : results)
-      System.out.println(i);
-    results = searchWithQuery("effectively AND baccalaureate");
-    for (int i : results)
-      System.out.println(i);
-    results = searchWithQuery("effectively");
-    for (int i : results)
-      System.out.println(i);
-    
   }
   
   
@@ -250,7 +272,7 @@ class VanillaSystem {
               dictionaryTrackers[includedWords.size()+i]++;
               System.out.println(dictionaryTrackers[includedWords.size()+i]);
             }
-          //  test if any of the removedWords match docID
+            //  test if any of the removedWords match docID
             if (removedWords.get(i).postings.get(dictionaryTrackers[includedWords.size()+i]).docID == docID) {
               matchingIncluded = false;
               break;
@@ -353,6 +375,7 @@ class RawDocument {
   int id;
   String title;
   ArrayList<RawDocumentWord> words = new ArrayList<RawDocumentWord>();
+  String description = "";
   
   RawDocument(int i, String t) {
     id = i;
@@ -367,6 +390,9 @@ class RawDocument {
   void addWords(RawDocumentWord[] w) {
     for (RawDocumentWord word : w)
       words.add(word);
+  }
+  void addLine(String line) {
+    description = description + " " + line;
   }
 }
 
@@ -388,11 +414,13 @@ class ProperDocument {
   int id;
   String title;
   ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
+  String description;
   
   ProperDocument(RawDocument doc) {
     //  set basic info
     id = doc.id;
     title = doc.title;
+    description = doc.description;
     //  System.out.println("Creating proper course: " + title);
     //  convert RawDocumentWord to Posting
     //  create single of each
@@ -430,6 +458,14 @@ class ProperDocument {
         System.out.print("} | ");
       }
     }
+  }
+  
+  //  prints the document as to be displayed
+  void displayDocument() {
+    System.out.println(title + ":");
+    String[] lines = description.split("  ");
+    for (String line : lines)
+    System.out.println(line);
   }
 }
 

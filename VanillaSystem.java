@@ -270,7 +270,7 @@ class VanillaSystem {
             //  System.out.println(i);
             while(removedWords.get(i).postings.get(dictionaryTrackers[includedWords.size()+i]).docID < docID && dictionaryTrackers[includedWords.size()+i] < removedWords.get(i).postings.size()-2) {
               dictionaryTrackers[includedWords.size()+i]++;
-              System.out.println(dictionaryTrackers[includedWords.size()+i]);
+              //  System.out.println(dictionaryTrackers[includedWords.size()+i]);
             }
             //  test if any of the removedWords match docID
             if (removedWords.get(i).postings.get(dictionaryTrackers[includedWords.size()+i]).docID == docID) {
@@ -282,7 +282,7 @@ class VanillaSystem {
         
         //  check if matchingIncluded is (still) true, and if so, add the docID to the list
         if (matchingIncluded) {
-          System.out.println("adding document: " + docID);
+          //  System.out.println("adding document: " + docID);
           docs.add(docID);
         }
         
