@@ -19,15 +19,20 @@ class Dictionary {
   static ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
   
   
+  public static void main(String args[]) {
+    ProperDocument[] documents = new ProperDocument[0];
+    createDictionary(documents);
+  }
+  
+  
   
   Dictionary(char[] p, String[] sr) {
     stemmingRules = sr;
     punctuation = p;
   }
   
+  
   public static ProperDocument[] createDictionary(ProperDocument[] documents) {
-    
-    
     
     
     
@@ -158,10 +163,13 @@ class Dictionary {
       System.out.println();
       for (DictionaryWord word : words) {
         for (int i = 0; i < documents.length; i++) {
-          if (word.posting(i) != null)  //  check that there is the posting for the document with this as the id
+          if (word.posting(i) != null) {  //  check that there is the posting for the document with this as the id
             setWeight(word, i);
+          }
         }
       }
+      System.out.println("finished adding weights to dictionary");
+      System.out.println();
       
       
     }
@@ -300,17 +308,14 @@ class Dictionary {
   }
   
   static void setWeight(DictionaryWord word, int docID) {
-    word.setWeight(inverseDocumentFrequency(word) * termFrequency(word, docID), docID);
+    float weight = inverseDocumentFrequency(word) * termFrequency(word, docID);
+    word.setWeight(weight, docID);
   }
   
   //  get weights for input document
   static float weight(DictionaryWord word, int docID) {
     return word.weight(docID);
   }
-  
-  
-  
-  
   
   
   

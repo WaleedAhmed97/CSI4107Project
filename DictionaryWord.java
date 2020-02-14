@@ -37,14 +37,9 @@ class DictionaryWord {
   }
   //  input is documents id
   float termFrequency(int id) {
-    int index = 0;
-    while (index < postings.size()) {
-      if (postings.get(index).docID != id)
-        index++;
-    }
-    if (index == postings.size())
+    if (posting(id) == null)
       return 0;
-    return posting(index).postings.length;
+    return posting(id).postings.length;
   }
   
   //  returns the posting for the document matching the input id
@@ -53,6 +48,8 @@ class DictionaryWord {
     while (index < postings.size()) {
       if (postings.get(index).docID != id)
         index++;
+      else
+        break;
     }
     if (index == postings.size())
       return null;
