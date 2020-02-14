@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.io.*;
+import java.lang.Math; 
 
 
 //  stores a word and postings
@@ -30,6 +31,49 @@ class DictionaryWord {
   int totalDocuments() {
     return postings.size();
   }
+  
+  float inverseDocumentFrequency() {
+    return (float)(Math.log(totalDocuments()/postings.size()));
+  }
+  //  input is documents id
+  float termFrequency(int id) {
+    int index = 0;
+    while (index < postings.size()) {
+      if (postings.get(index).docID != id)
+        index++;
+    }
+    if (index == postings.size())
+      return 0;
+    return posting(index).postings.length;
+  }
+  
+  //  returns the posting for the document matching the input id
+  Posting posting(int id) {
+    int index = 0;
+    while (index < postings.size()) {
+      if (postings.get(index).docID != id)
+        index++;
+    }
+    if (index == postings.size())
+      return null;
+    return postings.get(index);
+  }
+  
+  float termFrequency() {
+    return totalOccurances();
+  }
+  
+  //  sets the weight for the specified document
+  void setWeight(float w, int id) {
+    if (posting(id) != null) {
+      posting(id).setWeight(w);
+    }
+  }
+  
+  //  returns the weight on the specified document
+  float weight(int docID) {
+    return posting(docID).weight;
+  }
 }
 
 //  class for storing postings
@@ -37,6 +81,8 @@ class Posting {
   
   int docID;
   int[] postings;
+  
+  float weight;
   
   Posting(int id, int[] p) {
     docID = id;
@@ -49,5 +95,9 @@ class Posting {
       postings2[i] = postings[i];
     postings2[postings.length] = p;
     postings = postings2;
+  }
+  
+  void setWeight(float w) {
+    weight = w;
   }
 }

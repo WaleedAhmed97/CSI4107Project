@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.*;
 import java.io.FileNotFoundException; 
-
+import java.lang.Math; 
 
 
 
@@ -150,6 +150,20 @@ class Dictionary {
       //  dictionary.printDictionary();
       
       
+      
+      
+      
+      //  set weights for all postings
+      System.out.println("adding weights to dictionary");
+      System.out.println();
+      for (DictionaryWord word : words) {
+        for (int i = 0; i < documents.length; i++) {
+          if (word.posting(i) != null)  //  check that there is the posting for the document with this as the id
+            setWeight(word, i);
+        }
+      }
+      
+      
     }
     catch (Exception e) {
       System.out.println("Did not work");
@@ -269,6 +283,37 @@ class Dictionary {
       }
     }
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  static float inverseDocumentFrequency(DictionaryWord word) {
+    return (float)(Math.log(words.size()/word.totalDocuments()));
+  }
+  
+  static float termFrequency(DictionaryWord word, int docID) {
+    return (float)(Math.log(1 + word.termFrequency(docID)));
+  }
+  
+  static void setWeight(DictionaryWord word, int docID) {
+    word.setWeight(inverseDocumentFrequency(word) * termFrequency(word, docID), docID);
+  }
+  
+  //  get weights for input document
+  static float weight(DictionaryWord word, int docID) {
+    return word.weight(docID);
+  }
+  
+  
+  
+  
+  
+  
+  
 }
 
 //  DictionaryWord stored in main VanillaSystem 
