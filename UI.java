@@ -14,8 +14,7 @@ public class UI extends JFrame {
   private JPanel panel = new JPanel();
   private JScrollPane scrollPane = new JScrollPane(result);
   private VanillaSystem Vanilla = new VanillaSystem();
-  
-  private JOptionPane msg;
+  private SpellCorrector Correct= new SpellCorrector(Vanilla.dictionary);
   int index[];
   
   
@@ -29,18 +28,30 @@ public class UI extends JFrame {
   private DefaultTableModel makeModel(String info) {
     DefaultTableModel model = new DefaultTableModel();
     
-    Vanilla.createDictionary();
     
-    index=Vanilla.searchWithQuery(info);
+    try {
+    index=VanillaSystem.searchWithQuery(info);
     model.addColumn("Course Codes");
     for(int i:index) {
       //  System.out.println(i);
-      model.addRow(new Object [] {Vanilla.documents[i].title});
+      model.addRow(new Object [] {VanillaSystem.documents[i].title});
       //  System.out.println(Vanilla.documents[i].description);
       
       
+    }}catch(Exception e) {
+    	
+     int dialogResult = JOptionPane.showConfirmDialog(null, "There were not results for this search.\n\n Did you mean X?");
+     if(dialogResult==JOptionPane.YES_OPTION) {
+    	 
+    	 
+    	 
+     }
+
     }
     
+    	
+    
+    	
     return model;
     
   }
@@ -59,6 +70,7 @@ public class UI extends JFrame {
   
   private UI(String title) throws HeadlessException {
     super(title);
+    Vanilla.createDictionary();
     
     setSize(650, 600);
     setResizable(false);
@@ -74,7 +86,7 @@ public class UI extends JFrame {
         //used from https://www.tutorialspoint.com/how-can-we-implement-a-long-text-of-the-joptionpane-message-dialog-in-java
         JTextArea jta = new JTextArea(20, 50);
         jta.setText(Vanilla.documents[index[result.getSelectedRow()]].title+"\n\n"+
-                    printdescription(Vanilla.documents[index[result.getSelectedRow()]].description.split("  ")));
+        printdescription(Vanilla.documents[index[result.getSelectedRow()]].description.split("  ")));
         
         jta.setEditable(false);
         JScrollPane jsp = new JScrollPane(jta);
