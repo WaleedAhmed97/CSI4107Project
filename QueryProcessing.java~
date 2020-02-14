@@ -71,12 +71,14 @@ class QueryProcessing {
     ArrayList<ArrayList<String>> queries = new ArrayList<ArrayList<String>>();
     //  get queries
     queries = getQueries(head);
+    /*
     System.out.println();
     printQueries(queries);
     System.out.println();
     System.out.println();
     System.out.println();
     System.out.println();
+    */
     
     return queries;
   }

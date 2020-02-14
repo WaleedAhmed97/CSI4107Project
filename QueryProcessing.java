@@ -13,7 +13,7 @@ class QueryProcessing {
      processQuery("(Thing OR Something OR Other) AND (This OR That) AND Others");
      processQuery("(Thing OR Something OR Other) AND (This OR (That AND (True OR False)))");
      */
-    processQuery("A AND NOT (B AND NOT (C OR D))");
+    printQueries(processQuery("A AND NOT (B AND NOT (C OR D))"));
     processQuery("A AND NOT (B AND NOT (C AND D))");
     processQuery("(Thing OR Something OR Other) AND (This OR (That AND (True OR False)))");
     processQuery("NOT (C AND D)");
@@ -22,10 +22,22 @@ class QueryProcessing {
     processQuery("(effectively AND NOT baccalaureate)");
     processQuery("(effectively AND NOT (baccalaureate))");
     processQuery("(NOT(effectively AND NOT baccalaureate))");
-    processQuery("NOT(effectively AND NOT baccalaureate)");
-    processQuery("NOT(effectively OR NOT baccalaureate)");
-    processQuery("NOT(test AND NOT(effectively OR NOT baccalaureate))");
-    processQuery("test OR (effectively OR baccalaureate)");
+    System.out.println();
+    System.out.println();
+    System.out.println();
+    printQueries(processQuery("NOT(effectively AND NOT baccalaureate)"));
+    System.out.println();
+    System.out.println();
+    System.out.println();
+    printQueries(processQuery("NOT(effectively OR NOT baccalaureate)"));
+    System.out.println();
+    System.out.println();
+    System.out.println();
+    printQueries(processQuery("NOT(test AND NOT(effectively OR NOT baccalaureate))"));
+    System.out.println();
+    System.out.println();
+    System.out.println();
+    printQueries(processQuery("test OR (effectively OR baccalaureate)"));
   }
   
   //  returns a list of lists of strings, each list being the a list of Strings for the AND queries
@@ -72,13 +84,13 @@ class QueryProcessing {
     //  get queries
     queries = getQueries(head);
     /*
-    System.out.println();
-    printQueries(queries);
-    System.out.println();
-    System.out.println();
-    System.out.println();
-    System.out.println();
-    */
+     System.out.println();
+     printQueries(queries);
+     System.out.println();
+     System.out.println();
+     System.out.println();
+     System.out.println();
+     */
     
     return queries;
   }
@@ -91,7 +103,7 @@ class QueryProcessing {
       for (QueryNode child : node.children) {
         ArrayList<ArrayList<String>> childQueries = getQueries(child);
         for (ArrayList<String> query : childQueries)
-        queries.add(query);
+          queries.add(query);
       }
     }
     //  AND
@@ -173,18 +185,18 @@ class QueryProcessing {
     //  check if NOT and extend if so
     if (node.not) {
       //  if (node.type != -1 || (node.type == -1 && node.children.size() > 0)) {  //  check not the word itself
-        //  swap type
-        if (node.type != -1)
-          node.type = 1-node.type;
-        //  remove not
-        if (node.children.size() > 0)
-          node.not = !node.not;
-        //  set all children to not and extend not
-        for (QueryNode child : node.children) {
-          child.not = !child.not;
-          extendNot(child);
-        }
-    //    }
+      //  swap type
+      if (node.type != -1)
+        node.type = 1-node.type;
+      //  remove not
+      if (node.children.size() > 0)
+        node.not = !node.not;
+      //  set all children to not and extend not
+      for (QueryNode child : node.children) {
+        child.not = !child.not;
+        extendNot(child);
+      }
+      //    }
     }
   }
   
