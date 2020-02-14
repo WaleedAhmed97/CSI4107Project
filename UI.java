@@ -59,7 +59,7 @@ public class UI extends JFrame {
       }
     }else if(type==0){
       String[]list=Vanilla.vectorQueryProcessing.processQuery(info);
-      for(String word: strings){
+      for(String word: list){
         if(!correct.inDictionary(word)){
           
           
@@ -89,6 +89,8 @@ public class UI extends JFrame {
       
       
       
+<<<<<<< HEAD
+<<<<<<< HEAD
     }
     
     
@@ -97,7 +99,7 @@ public class UI extends JFrame {
     return model;
     
   }
-}
+
 
 private String printdescription(String []lines ) {
   String line="";
@@ -130,55 +132,98 @@ private UI(String title) throws HeadlessException {
       JTextArea jta = new JTextArea(20, 50);
       jta.setText(Vanilla.documents[index[result.getSelectedRow()]].title+"\n\n"+
                   printdescription(Vanilla.documents[index[result.getSelectedRow()]].description.split("  ")));
-      
-      jta.setEditable(false);
-      JScrollPane jsp = new JScrollPane(jta);
-      jsp.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-      
-      JOptionPane.showMessageDialog(null, jsp);
+=======
+>>>>>>> 6a76bf9db5be3ab89b4451edef4b1008291f6fbf
+=======
+>>>>>>> 6a76bf9db5be3ab89b4451edef4b1008291f6fbf
       
       
+      
+      return model;
       
     }
-  }); 
+  }
+  
+  private String printdescription(String []lines ) {
+    String line="";
+    
+    for(String i:lines) {
+      line+="\n"+i;
+    }
+    
+    
+    return line;
+  }
   
   
-  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-  result.setFillsViewportHeight( true );
+  private UI(String title) throws HeadlessException {
+    super(title);
+    Vanilla.createDictionary();
+    
+    setSize(650, 600);
+    setResizable(false);
+    scrollPane.setPreferredSize(new Dimension (600,500)); 
+    addComponents();
+    Table();
+    
+    //used from https://stackoverflow.com/questions/10128064/jtable-selected-row-click-event
+    result.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+      public void valueChanged(ListSelectionEvent event) {
+        
+        
+        //used from https://www.tutorialspoint.com/how-can-we-implement-a-long-text-of-the-joptionpane-message-dialog-in-java
+        JTextArea jta = new JTextArea(20, 50);
+        jta.setText(Vanilla.documents[index[result.getSelectedRow()]].title+"\n\n"+
+                    printdescription(Vanilla.documents[index[result.getSelectedRow()]].description.split("  ")));
+        
+        jta.setEditable(false);
+        JScrollPane jsp = new JScrollPane(jta);
+        jsp.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        
+        JOptionPane.showMessageDialog(null, jsp);
+        
+        
+        
+      }
+    }); 
+    
+    
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    result.setFillsViewportHeight( true );
+    
+    
+    revalidate();
+    repaint();
+    
+    
+    
+    
+    setVisible(true);
+    
+  }
   
   
-  revalidate();
-  repaint();
+  
+  
+  private void addComponents() {
+    panel.add(search,BorderLayout.EAST);
+    panel.add(VSMButton,BorderLayout.CENTER);
+    panel.add(BooleanButton,BorderLayout.WEST);
+    panel.add(scrollPane);
+    add(panel);
+    
+    
+  }
+  
+  private void Table() {
+    VSMButton.addActionListener(e -> result.setModel(makeModel(search.getText(),0)));
+    BooleanButton.addActionListener(f -> result.setModel(makeModel(search.getText()),1));
+    
+    
+    
+  }
   
   
   
   
-  setVisible(true);
-  
-}
-
-
-
-
-private void addComponents() {
-  panel.add(search,BorderLayout.EAST);
-  panel.add(VSMButton,BorderLayout.CENTER);
-  panel.add(BooleanButton,BorderLayout.WEST);
-  panel.add(scrollPane);
-  add(panel);
-  
-  
-}
-
-private void Table() {
-  VSMButton.addActionListener(e -> result.setModel(makeModel(search.getText(),0)));
-  BooleanButton.addActionListener(f -> result.setModel(makeModel(search.getText()),1));
-  
-  
-  
-}
-
-
-
-
 }
