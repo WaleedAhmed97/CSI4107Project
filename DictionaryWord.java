@@ -16,6 +16,20 @@ class DictionaryWord {
   void addPosting(Posting p) {
     postings.add(p);
   }
+  
+  //  returns the total occurances of the word in the document
+  int totalOccurances() {
+    int total = 0;
+    for (Posting p : postings) {
+      total += p.postings.length;
+    }
+    return total;
+  }
+  
+  //  returns the total documents of the word in the document
+  int totalDocuments() {
+    return postings.size();
+  }
 }
 
 //  class for storing postings
