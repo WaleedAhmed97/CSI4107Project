@@ -209,7 +209,7 @@ class VanillaSystem {
     //  set base weight for compare against
     float[] baseVector = new float[queries.length];
     for (int i = 0; i < queries.length; i++) {
-      baseVector[i] == 1;
+      baseVector[i] = 1;
     }
     
     
@@ -221,8 +221,8 @@ class VanillaSystem {
     
     //  set the weights for each document for all words
     for (int i = 0; i < documents.length; i++) {
-      for (String word : queries) {
-        weightVectors[i] += dictionary.weight(dictionary.getWord(word), i);
+      for (in tj = 0; j < queries.length; j++) {
+        weightVectors[i][j] += dictionary.weight(dictionary.getWord(word), i);
       }
     }
     
