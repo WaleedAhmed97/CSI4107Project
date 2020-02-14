@@ -238,7 +238,7 @@ class VanillaSystem {
   
   
   String[] condense (ArrayList<ArrayList<String>> lists) {
-    ArrayList<String> l;
+    ArrayList<String> l = new ArrayList<String>();
     for (ArrayList<String> list : lists) {
       for (String s : list) {
         l.add(s);
