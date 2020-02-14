@@ -8,12 +8,12 @@ class VectorQueryProcessing {
   public static void main(String args[]) {
   }
   
-  //  returns a list of strings for queries
-  static ArrayList<ArrayList<String>> processQuery(String query) {
+  //  returns an array of strings for queries
+  static String[] processQuery(String query) {
     
     System.out.println(query);
     
-    return null;
+    return query.split(" ");
     
   }
 }
