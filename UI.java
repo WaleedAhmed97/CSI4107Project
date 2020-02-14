@@ -30,7 +30,7 @@ public class UI extends JFrame {
     
     
     try {
-    index=VanillaSystem.searchWithQuery(info);
+    index=VanillaSystem.booleanSearchWithQuery(info);
     model.addColumn("Course Codes");
     for(int i:index) {
       //  System.out.println(i);

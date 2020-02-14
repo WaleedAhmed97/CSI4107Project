@@ -38,9 +38,6 @@ class BooleanQueryProcessing {
     System.out.println();
     System.out.println();
     printQueries(processQuery("test OR (effectively OR baccalaureate)"));
-    System.out.println();
-    System.out.println();
-    printQueries(processQuery("(query AND processing)"));
   }
   
   //  returns a list of lists of strings, each list being the a list of Strings for the AND queries
@@ -95,9 +92,6 @@ class BooleanQueryProcessing {
      System.out.println();
      */
     
-    //  print out results
-    printQueries(queries);
-    
     return queries;
   }
   
@@ -131,9 +125,6 @@ class BooleanQueryProcessing {
       else
         queries = getQueries(node.children.get(0));
     }
-    
-    //  print out results
-    printQueries(queries);
     
     return queries;
   }
