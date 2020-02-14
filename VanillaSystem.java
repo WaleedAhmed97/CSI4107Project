@@ -8,7 +8,7 @@ class VanillaSystem {
   
   
   
-  static QueryProcessing queryProcessing = new QueryProcessing();
+  static BooleanQueryProcessing booleanQueryProcessing = new BooleanQueryProcessing();
   
   
   //  all documents
@@ -54,7 +54,7 @@ class VanillaSystem {
     //  should print empty line
     System.out.println(("Program test").substring(0, 0));
     
-    queryProcessing.processQuery("test AND (this OR that)");
+    booleanQueryProcessing.processQuery("test AND (this OR that)");
     
     
     //  dictionary
@@ -91,7 +91,7 @@ class VanillaSystem {
   //  an entered query is turned into queries and then queried on the dictionary to turn back relevent pages (array of the document IDs)
   static int[] searchWithQuery(String query) {
     //  get queries
-    ArrayList<ArrayList<String>> queries = queryProcessing.processQuery(query);
+    ArrayList<ArrayList<String>> queries = booleanQueryProcessing.processQuery(query);
     
     //  resulting docs
     ArrayList<Integer> docs = new ArrayList<Integer>();
