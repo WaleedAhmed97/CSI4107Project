@@ -232,6 +232,31 @@ class VanillaSystem {
     
     return null;
   }
+  
+  
+  
+  
+  
+  String[] condense (ArrayList<ArrayList<String>> lists) {
+    ArrayList<String> l;
+    for (ArrayList<String> list : lists) {
+      for (String s : list) {
+        l.add(s);
+      }
+    }
+    Collections.sort(list);
+    for (int i = 0; i < l.size()-1; i++) {
+      if (l.get(i).equals(l.get(i+1))) {
+        l.remove(i);
+        i--;
+      }
+    }
+    String[] list = new String[l.size()];
+    for (int i = 0; i < l.size(); i++) {
+      list[i] = l.get(i);
+    }
+    return list;
+  }
 }
 
 
