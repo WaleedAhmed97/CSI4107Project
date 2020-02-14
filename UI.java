@@ -30,18 +30,30 @@
       DefaultTableModel model = new DefaultTableModel();
       
       if(type==1){
-        String[] list=Vanilla.condense(Vanilla.booleanQueryProcessing.processQuery(info));
+        String old;
+        String[]list=Vanilla.vectorQueryProcessing.processQuery(info);
         for(String word: list){
+          
+          if(word.charAt(0)=='!'){
+            word=word.substring(1,word.length()-1);
+          }
+          old=word;
           if(!correct.inDictionary(word)){
-            correct.getSuggestions(word);
+            //if not in dictionary popup with suggestions to replace. once clicked, replace word with suggestion. 
             
             
-            
-            
+            word =
+          }
+            //  replace with new word
+            for(int i =0; i < info.length()-old.length();i++){
+              if (info.substring(i, i+old.length()).equals(old)) {
+                info = info.substring(0, i) + word + info.substring(i+old.length, info.length());
+                i = word.length()-2;
+              }
+              
           }}
         
         
-        if(Vanilla.booleanSearchWithQuery(info)!=null){
           index=VanillaSystem.booleanSearchWithQuery(info);
           model.addColumn("Course Codes");
           for(int i:index) {
@@ -49,25 +61,35 @@
             model.addRow(new Object [] {VanillaSystem.documents[i].title});
             
           }
-        }else{
-          int dialogResult = JOptionPane.showConfirmDialog(null, "There were not results for this search.\n\n Did you mean X?");
-          if(dialogResult==JOptionPane.YES_OPTION) {
-            
-            
-            
-          }
-        }
+       
+        
       }else if(type==0){
+        String old;
         String[]list=Vanilla.vectorQueryProcessing.processQuery(info);
         for(String word: list){
+          
+          if(word.charAt(0)=='!'){
+            word=word.substring(1,word.length()-1);
+          }
+          old=word;
           if(!correct.inDictionary(word)){
+            //if not in dictionary popup with suggestions to replace. once clicked, replace word with suggestion. 
             
-            
+          
+          
+            word = 
+          }
+            //  replace with new word
+            for(int i =0; i < info.length()-old.length();i++){
+              if (info.substring(i, i+old.length()).equals(old)) {
+                info = info.substring(0, i) + word + info.substring(i+old.length, info.length());
+                i = word.length()-2;
+              }
+              
           }}
         
-        
-        
-        if(Vanilla.vectorSearchWithQuery(info)!=null){
+      
+      
           index=VanillaSystem.vectorSearchWithQuery(info);
           model.addColumn("Course Codes");
           for(int i:index) {
@@ -77,14 +99,7 @@
           
           
           
-        }else{
-          int dialogResult = JOptionPane.showConfirmDialog(null, "There were not results for this search.\n\n Did you mean X?");
-          if(dialogResult==JOptionPane.YES_OPTION) {
-            
-            
-            
-          }
-          
+    
         }
         
         
