@@ -221,8 +221,8 @@ class VanillaSystem {
     
     //  set the weights for each document for all words
     for (int i = 0; i < documents.length; i++) {
-      for (in tj = 0; j < queries.length; j++) {
-        weightVectors[i][j] += dictionary.weight(dictionary.getWord(word), i);
+      for (int j = 0; j < queries.length; j++) {
+        weightVectors[i][j] = dictionary.weight(dictionary.getWord(queries[j]), i);
       }
     }
     
@@ -244,7 +244,7 @@ class VanillaSystem {
         l.add(s);
       }
     }
-    Collections.sort(list);
+    Collections.sort(l);
     for (int i = 0; i < l.size()-1; i++) {
       if (l.get(i).equals(l.get(i+1))) {
         l.remove(i);
