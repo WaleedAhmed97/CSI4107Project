@@ -41,6 +41,7 @@ public class SpellCorrector {
       
       
     }
+    System.out.println(suggestions.toString());
     return suggestions; 
   }
   
