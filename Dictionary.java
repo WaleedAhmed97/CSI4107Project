@@ -49,6 +49,7 @@ class Dictionary {
       String line = br.readLine();  //  get first line
       while (line != null) {
         //  casefold line
+        String originalLine = line;  //  copy to preserve capitals
         line = line.toLowerCase();
         //  process line
         //  if it detects that the first 3 letters are "adm", "psy", or "mat", it creates a new document starting with that line
@@ -124,7 +125,7 @@ class Dictionary {
           rawDocuments.get(rawDocuments.size()-1).addWords(wordPostings);
           
           //  add line to document
-          rawDocuments.get(rawDocuments.size()-1).addLine(line);
+          rawDocuments.get(rawDocuments.size()-1).addLine(originalLine);
           
           //  add length to position counter
           positionCounter += words.length;

@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.io.*;
 
 
 //  stores the bag of words/postings from each line of a document

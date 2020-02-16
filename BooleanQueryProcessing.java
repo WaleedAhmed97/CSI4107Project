@@ -390,7 +390,7 @@ class BooleanQueryProcessing {
         //  * at end
         else if (place == 1) {
           //  set word part
-          word = word.substring(1, word.length());
+          word = word.substring(0, word.length()-1);
 //  search dictionary for ending and add as children
           for (DictionaryWord w : dictionary.words) {
             String dword = w.word;
