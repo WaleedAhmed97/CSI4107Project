@@ -58,6 +58,13 @@ class BooleanQueryProcessing {
     
     System.out.println(query);
     
+    //  remove _
+    String[] underscore = query.split("_");
+    query = underscore[0];
+    for (int i = 1; i < underscore.length; i++)
+      query += " " + underscore[i];
+    
+    
     //  checks that all NOTs are properly bracketed
     query = enforceNotBrackets(query);
     
@@ -310,14 +317,14 @@ class BooleanQueryProcessing {
   //  wildcard management
   static void wildcard(QueryNode node) {
     //  AND or OR node
-    if (node.type != -1) {
+    //  if (node.type != -1) {
       //  call function on children
       for (QueryNode child : node.children) {
         wildcard(child);
       }
-    }
+    //  }
     //  otherwise, operate on word
-    else {
+    if (node.type == -1) {
       
       String word = node.parts.get(0);
       
