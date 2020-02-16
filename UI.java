@@ -21,7 +21,8 @@
 			    String listnew[];
 			    int pick;
 			    
-			    
+			     
+
 			    
 			    public static void main(String[] args) {
 			      new UI("UOttawa Course Finder");
@@ -33,7 +34,7 @@
 			    	
 			      DefaultTableModel model = new DefaultTableModel();
 			      model.addColumn("Course Codes");
-			      
+			      try{
 			      if(type==1){
 			        
 			        ArrayList<ArrayList<String>>list=Vanilla.booleanQueryProcessing.processQuery(info);
@@ -99,8 +100,13 @@
 			     
 
 			    
-			       } 
+			       }}catch(Exception e) {
+
+			       	JOptionPane.showMessageDialog(null,"No results");
+
+			       }
 			          return model;
+			       
 			      
 			      
 			      
@@ -174,7 +180,7 @@
 			      //used from https://stackoverflow.com/questions/10128064/jtable-selected-row-click-event
 			      result.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
 			        public void valueChanged(ListSelectionEvent event) {
-			          
+			          if(result.getSelectedRow()>=0){
 			          
 			          //used from https://www.tutorialspoint.com/how-can-we-implement-a-long-text-of-the-joptionpane-message-dialog-in-java
 			          JTextArea jta = new JTextArea(20, 50);
@@ -191,7 +197,7 @@
 			          
 			          
 			          
-			        }
+			        }}
 			      });
 			      
 			      
