@@ -8,7 +8,7 @@
 import java.util.ArrayList;
 		
 		  public class UI extends JFrame {
-			int pick;
+			
 		    private JTextField search = new JTextField(30);
 		    private JButton VSMButton = new JButton("VSM Search");
 		    private JButton BooleanButton = new JButton("Boolean Search");
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 		    private VanillaSystem Vanilla = new VanillaSystem();
 		    private SpellCorrector correct= new SpellCorrector(Vanilla.dictionary);
 		    int index[];
+		    String listnew[];
+		    int pick;
 		    
 		    
 		    
@@ -31,123 +33,130 @@ import java.util.ArrayList;
 		    	
 		      DefaultTableModel model = new DefaultTableModel();
 		      model.addColumn("Course Codes");
+		      
 		      if(type==1){
-		        String old;
-		        String[]list=Vanilla.vectorQueryProcessing.processQuery(info);
-		        for(String word: list){
-		          
+		        
+		        ArrayList<ArrayList<String>>list=Vanilla.booleanQueryProcessing.processQuery(info);
+		      	listnew=Vanilla.condense(list);
+		        for(String word:listnew){
+		        	
+		         String old;
 		          if(word.charAt(0)=='!'){
 		            word=word.substring(1,word.length()-1);
 		          }
-		          old=word;
+		          	old=word;
 		          if(!correct.inDictionary(word)){
 		            //if not in dictionary popup with suggestions to replace. once clicked, replace word with suggestion. 
-		        	   makeDialog(word,correct.getSuggestions(word));   	  
-		        	  
+		        	 word=makeDialog(word,correct.getSuggestions(word));		           	
+		        	 
+		        	 info=info.replace(old,word);
+		           			
 		           
 		          }
-		            //  replace with new word
-		            for(int i =0; i < info.length()-old.length();i++){
-		              if (info.substring(i, i+old.length()).equals(old)) {
-		                info = info.substring(0, i) + word + info.substring(i+old.length(), info.length());
-		                i = word.length()-2;
-		              }
-		              
-		          }}
+		          
+		           
+		      }
+
+
+		         	
+		          
+
+		     
+		       	
+		         search.setText(info);	
+		         index=VanillaSystem.booleanSearchWithQuery(info);
 		        
-		        
-		        // index=VanillaSystem.booleanSearchWithQuery(info);
-		        
-		    //  for(int i:index) {
+		   for(int i:index) {
 		            
-		        // model.addRow(new Object [] {VanillaSystem.documents[i].title});
+		         model.addRow(new Object [] {VanillaSystem.documents[i].title});
 		            
-		    //  }
-		       
+		   }
+		     
 		        
 		      }else if(type==0){
-		        String old;
-		        String[]list=Vanilla.vectorQueryProcessing.processQuery(info);
-		        for(String word: list){
-		          
+		        String[] list=Vanilla.vectorQueryProcessing.processQuery(info);
+		      	
+		        for(String word:list){
+		        	
+		         String old;
 		          if(word.charAt(0)=='!'){
 		            word=word.substring(1,word.length()-1);
 		          }
-		          old=word;
+		          	old=word;
 		          if(!correct.inDictionary(word)){
 		            //if not in dictionary popup with suggestions to replace. once clicked, replace word with suggestion. 
-		            
-		          
-		          
-		            //word = 
+		        	 word=makeDialog(word,correct.getSuggestions(word));		           	
+		        	 
+		        	 info=info.replace(old,word);
+		           			
+		           
 		          }
-		            //  replace with new word
-		            for(int i =0; i < info.length()-old.length();i++){
-		              if (info.substring(i, i+old.length()).equals(old)) {
-		                info = info.substring(0, i) + word + info.substring(i+old.length(), info.length());
-		                i = word.length()-2;
-		              }
-		              
-		          }}
-		        
-		      
-		      
-		         // index=VanillaSystem.vectorSearchWithQuery(info);
-		         // model.addColumn("Course Codes");
-		         // for(int i:index) {
-		          //  model.addRow(new Object [] {VanillaSystem.documents[i].title});
-		            
-		         // }
 		          
-		          
-		          
-		    
-		        }
-		        
-		          return model;
+		           
 		      }
+
+
+		         	
+		          
+
+		     
+		       	
+		         search.setText(info);	
+		         index=VanillaSystem.vectorSearchWithQuery(info);
+		        
+		   for(int i:index) {
+		            
+		         model.addRow(new Object [] {VanillaSystem.documents[i].title});
+		            
+		   }
+		     
+
+		    
+		       } 
+		          return model;
 		      
 		      
 		      
-		      
-		    public int makeDialog(String word,ArrayList<String> choices) {
+		  }  
+
+
+
+		 
+		    public String makeDialog(String outerword,ArrayList<String> choices) {
 		    	
 		    	DefaultTableModel model=new DefaultTableModel();
 		    	JTable table=new JTable();
-		    	JDialog choose = new JDialog();
+		    	
 		    	model.addColumn("Possible Suggestions");
 		    	
-	        	choose.setTitle("Which of the options below did you mean instead of "+word+"?");
-	        	choose.setVisible(true);
-	        	choose.setSize(500, 250);
-	        	choose.setResizable(false);
-	        	
-	        	choose.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
-	        	choose.getContentPane().setLayout( new BorderLayout() );
 	        	
 	        	
 	        	
-	        	 for(String correction: correct.getSuggestions(word)) {
+	        	 for(String correction: choices) {
 	            	 model.addRow(new Object [] {correction});
 	            	 
 	            	
 	            }
+
 	        	table.setModel(model);
 	        	table.setDefaultEditor(Object.class, null);
 	        	table.getTableHeader().setReorderingAllowed(false);
 	        	JScrollPane scroller = new JScrollPane(table);
 	        
-	        	choose.add(scroller);
+	        	JOptionPane.showMessageDialog(null,scroller,"What did you mean instead of "+outerword+"?",JOptionPane.PLAIN_MESSAGE);
+	        	
 	        	
 	        	table.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
 			        public void valueChanged(ListSelectionEvent event) {
+			       		
+
 			        
-			        pick=table.getSelectedRow();
-			        choose.dispose();
-			        System.out.println(pick);
+			      
 			        }});
+	        	return choices.get(table.getSelectedRow());
+	        	
 		    	
-	        	return pick;
+	        	
 		    }
 		      
 		    
