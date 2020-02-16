@@ -361,6 +361,8 @@ class BooleanQueryProcessing {
       else {
 //  switch to OR node
         node.type = 0;
+        //  remove word
+        node.parts.remove(0);
         //  * at beginning
         if (place == -1) {
           //  set word part
