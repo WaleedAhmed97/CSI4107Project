@@ -69,7 +69,12 @@ class DictionaryWord {
   
   //  returns the weight on the specified document
   float weight(int docID) {
-    return posting(docID).weight;
+    //  if the word has a posting for the specific document
+    if (posting(docID) != null) {
+      return posting(docID).weight;
+    }
+    //  otherwise, return 0
+    return 0;
   }
 }
 
