@@ -13,8 +13,13 @@ class VectorQueryProcessing {
     
     System.out.println(query);
     
-    return query.split(" ");
+    String[] queryWords = query.split(" ");
     
+    for (int i = 0; i < queryWords.length; i++) {
+      queryWords[i] = queryWords[i].toLowerCase();
+    }
+    
+    return queryWords;
   }
 }
 

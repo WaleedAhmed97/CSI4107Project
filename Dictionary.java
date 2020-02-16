@@ -48,11 +48,13 @@ class Dictionary {
       BufferedReader br = new BufferedReader(new FileReader(classes));
       String line = br.readLine();  //  get first line
       while (line != null) {
+        //  casefold line
+        line = line.toLowerCase();
         //  process line
-        //  if it detects that the first 3 letters are "ADM", "PSY", or "MAT", it creates a new document starting with that line
+        //  if it detects that the first 3 letters are "adm", "psy", or "mat", it creates a new document starting with that line
         //  System.out.println(line);
         if (line.length() > 8)  //  minimum length for course code
-          if (line.substring(0, 3).equals("ADM") || line.substring(0, 3).equals("PSY") || line.substring(0, 3).equals("MAT")) {  //  check for course code beginning
+          if (line.substring(0, 3).equals("adm") || line.substring(0, 3).equals("psy") || line.substring(0, 3).equals("mat")) {  //  check for course code beginning
           //  check if english course
           if (Character.getNumericValue(line.charAt(5)) < 5) {  //  english section
             rawDocuments.add(new RawDocument(rawDocuments.size(), line.substring(0, 8)));
@@ -85,7 +87,7 @@ class Dictionary {
               //  check if the word is a course code; if so, check if next is a number and add as phrase; otherwise, disregard
               boolean courseCode = false;
               if (words[i].length() == 3) {  //  minimum length for course code
-                if (words[i].equals("ADM") || words[i].equals("PSY") || words[i].equals("MAT")) {  //  check for course code beginning
+                if (words[i].equals("adm") || words[i].equals("psy") || words[i].equals("mat")) {  //  check for course code beginning
                   //  check if following word is there
                   if (words.length > i+1)
                     //  clean next word

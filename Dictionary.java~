@@ -2,87 +2,37 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.*;
 import java.io.FileNotFoundException; 
+import java.lang.Math; 
 
 
-class VanillaSystem {
+
+//  dictionary class
+class Dictionary {
   
   
   
-  static QueryProcessing queryProcessing = new QueryProcessing();
+  
+  static String[] stemmingRules;
+  static char[] punctuation;
   
   
-    //  all documents
-   static ProperDocument[] documents;  //  to be initialized after the construction and processing of raw documents
-    
-    
-  
-  static char[] punctuation = {'"', '\'', ',', '.', '-', '(', ')', '{', '}', '\\', '/', '=', '+', ';', ':', '|'};  //  used for punctuation removal
-  
-  static Dictionary dictionary;
-  
-  
-  /*
-   Stemming rules:
-   Every word to be stemmed is duplicated, meaning that, in addition to the base word, a new RawDocumentWord is saved to wordPostings with the same position
-   -s -> -
-   -es -> -e
-   -ies -> -y
-   -ing -> -
-   -ing -> -e
-   -tion -> -te
-   -tion -> -e
-   -ation -> -e
-   -ers -> -e
-   -ers -> -
-   -er -> -e
-   -er -> -
-   -ly -> -
-   -ed -> -e
-   */
-  static String[] stemmingRules = {"s", "", "es", "", "ies", "y", "ing", "", "ing", "e", "tion", "te", "tion", "e", "ation", "e", "ers", "e", "ers", "", "er", "e", "er", "", "ly", "", "ed", "e"};
-  
-  
-  //  different trackers
-  boolean caseFolding = true;
-  boolean stemming = true;
-  
+  static ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
   
   
   public static void main(String args[]) {
-    System.out.println("Program test");
-    
-    //  should print empty line
-    System.out.println(("Program test").substring(0, 0));
-    
-    queryProcessing.processQuery("test AND (this OR that)");
-    
-    
-    createDictionary();
-    
-    
-    //  testing time
-    int[] results;
-    results = searchWithQuery("effectively AND NOT baccalaureate");
-    for (int i : results)
-      System.out.println(i);
-    results = searchWithQuery("effectively AND baccalaureate");
-    for (int i : results)
-      System.out.println(i);
-    results = searchWithQuery("effectively");
-    for (int i : results) {
-      System.out.println(i);
-      documents[i].displayDocument();
-    }
-    results = searchWithQuery("student AND NOT MAT");
-    for (int i : results)
-      System.out.println(i);
+    ProperDocument[] documents = new ProperDocument[0];
+    createDictionary(documents);
   }
   
-  public static void createDictionary() {
-    
-    
-    //  dictionary
-    dictionary = new Dictionary();
+  
+  
+  Dictionary(char[] p, String[] sr) {
+    stemmingRules = sr;
+    punctuation = p;
+  }
+  
+  
+  public static ProperDocument[] createDictionary(ProperDocument[] documents) {
     
     
     
@@ -190,7 +140,7 @@ class VanillaSystem {
       for (int i = 0; i < rawDocuments.size(); i++) {
         documents[i] = new ProperDocument(rawDocuments.get(i));
         //  create dictionary compiling all proper documents
-        dictionary.addDocument(documents[i]);
+        addDocument(documents[i]);
       }
       
       //  print out document 1 (0)
@@ -205,117 +155,30 @@ class VanillaSystem {
       //  dictionary.printDictionary();
       
       
+      
+      
+      
+      //  set weights for all postings
+      System.out.println("adding weights to dictionary");
+      System.out.println();
+      for (DictionaryWord word : words) {
+        for (int i = 0; i < documents.length; i++) {
+          if (word.posting(i) != null) {  //  check that there is the posting for the document with this as the id
+            setWeight(word, i);
+          }
+        }
+      }
+      System.out.println("finished adding weights to dictionary");
+      System.out.println();
+      
+      
     }
     catch (Exception e) {
       System.out.println("Did not work");
       System.out.println(e);
     }
-  }
-  
-  
-  //  an entered query is turned into queries and then queried on the dictionary to turn back relevent pages (array of the document IDs)
-  static int[] searchWithQuery(String query) {
-    //  get queries
-    ArrayList<ArrayList<String>> queries = queryProcessing.processQuery(query);
     
-    //  resulting docs
-    ArrayList<Integer> docs = new ArrayList<Integer>();
-    
-    //  search with each query
-    for (ArrayList<String> q : queries) {
-      //  sort words into contain and not
-      ArrayList<String> contains = new ArrayList<String>();
-      ArrayList<String> not = new ArrayList<String>();
-      for (String word : q) {
-        if (word.charAt(0) == '!')
-          not.add(word.substring(1, word.length()));
-        else
-          contains.add(word);
-      }
-      //  get DictionaryWords
-      ArrayList<DictionaryWord> includedWords = new ArrayList<DictionaryWord>();
-      for (String word : contains) {
-        includedWords.add(dictionary.getWord(word));
-        if (includedWords.get(includedWords.size()-1) == null)
-          System.out.println("Null found: " + word);
-      }
-      ArrayList<DictionaryWord> removedWords = new ArrayList<DictionaryWord>();
-      for (String word : not) {
-        removedWords.add(dictionary.getWord(word));
-        if (removedWords.get(removedWords.size()-1) == null)
-          System.out.println("Null found: " + word);
-      }
-      
-      //  search through dictionary words
-      //  to do this, have a tracker for each DictionaryWord in both lists. If all of the docs in includeWords match, and all the docs in removedWords are higher, add the doc to the list
-      int[] dictionaryTrackers = new int[includedWords.size()+removedWords.size()];
-      for (int i : dictionaryTrackers)
-        i = 0;
-      
-      boolean finished = false;
-      while (!finished) {
-        //  check all docs
-        boolean matchingIncluded = true;
-        int docID = includedWords.get(0).postings.get(dictionaryTrackers[0]).docID;
-        for (int i = 1; i<includedWords.size(); i++) {
-          //  if docID is different
-          if (docID != includedWords.get(i).postings.get(dictionaryTrackers[i]).docID) {
-            matchingIncluded = false;
-            break;
-          }
-        }
-        //  if docIDs matched, increase all removedWords while they are less than docID
-        if (matchingIncluded) {
-          for (int i = 0; i<removedWords.size(); i++) {
-            //  System.out.println(i);
-            while(removedWords.get(i).postings.get(dictionaryTrackers[includedWords.size()+i]).docID < docID && dictionaryTrackers[includedWords.size()+i] < removedWords.get(i).postings.size()-2) {
-              dictionaryTrackers[includedWords.size()+i]++;
-              //  System.out.println(dictionaryTrackers[includedWords.size()+i]);
-            }
-            //  test if any of the removedWords match docID
-            if (removedWords.get(i).postings.get(dictionaryTrackers[includedWords.size()+i]).docID == docID) {
-              matchingIncluded = false;
-              break;
-            }
-          }
-        }
-        
-        //  check if matchingIncluded is (still) true, and if so, add the docID to the list
-        if (matchingIncluded) {
-          //  System.out.println("adding document: " + docID);
-          docs.add(docID);
-        }
-        
-        //  increase includedWord with the lowest docID
-        docID = includedWords.get(0).postings.get(dictionaryTrackers[0]).docID;
-        int increase = 0;
-        for (int i = 1; i < includedWords.size(); i++) {
-          if (docID > includedWords.get(i).postings.get(dictionaryTrackers[i]).docID) {
-            docID = includedWords.get(i).postings.get(dictionaryTrackers[0]).docID;
-            increase = i;
-          }
-        }
-        dictionaryTrackers[increase]++;
-        
-        //  check if finished (any of the dictionary trackers are out of bounds; would only happen to the most recently increased one)
-        if (dictionaryTrackers[increase] == includedWords.get(increase).postings.size())
-          finished = true;
-      }
-    }
-    
-    //  at this point, all matching documents have been added to the docID arrayList, so sort, remove duplicates, and return the list of document IDs
-    Collections.sort(docs);
-    for (int i = 1; i < docs.size(); i++) {
-      if (docs.get(i) == docs.get(i-1)) {
-        docs.remove(i);
-        i--;
-      }
-    }
-    //  convert arrayList to array
-    int[] documents = new int[docs.size()];
-    for (int i = 0; i < docs.size(); i++) {
-      documents[i] = docs.get(i);
-    }
+    //  return resulting documents
     return documents;
   }
   
@@ -367,119 +230,13 @@ class VanillaSystem {
     }
     return true;
   }
-}
-
-
-//  stores the bag of words/postings from each line of a document
-class RawDocument {
-  int id;
-  String title;
-  ArrayList<RawDocumentWord> words = new ArrayList<RawDocumentWord>();
-  String description = "";
   
-  RawDocument(int i, String t) {
-    id = i;
-    title = t;
-    //  System.out.println("Creating course: " + t);
-  }
   
-  void addWords(ArrayList<RawDocumentWord> w) {
-    for (RawDocumentWord word : w)
-      words.add(word);
-  }
-  void addWords(RawDocumentWord[] w) {
-    for (RawDocumentWord word : w)
-      words.add(word);
-  }
-  void addLine(String line) {
-    description = description + " " + line;
-  }
-}
-
-//  simply stores the word and a posting
-//  required as the stemming duplicates the word, so the position cannot be reliably used for posting position
-class RawDocumentWord {
   
-  String word;
-  int post;
   
-  RawDocumentWord(String w, int p) {
-    word = w;
-    post = p;
-  }
-}
-
-//  stores the bag of words/postings from each line of a document
-class ProperDocument {
-  int id;
-  String title;
-  ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
-  String description;
-  
-  ProperDocument(RawDocument doc) {
-    //  set basic info
-    id = doc.id;
-    title = doc.title;
-    description = doc.description;
-    //  System.out.println("Creating proper course: " + title);
-    //  convert RawDocumentWord to Posting
-    //  create single of each
-    for (RawDocumentWord wordPosting : doc.words) {
-      words.add(new DictionaryWord(wordPosting.word));
-      int[] postings = {wordPosting.post};
-      words.get(words.size()-1).addPosting(new Posting(id, postings));
-    }
-    //  compound duplicates
-    for (int i = 0; i < words.size(); i++) {
-      for (int j = 0; j < words.size(); j++) {
-        if (i != j) {  //  don't do on same word
-          if (words.get(i).word.compareTo(words.get(j).word) == 0)  {  //  words are identical
-            //  add posting positing to former and remove later
-            words.get(i).postings.get(0).addPosting(words.get(j).postings.get(0).postings[0]);
-            words.remove(j);
-          }
-        }
-      }
-    }
-  }
-  
-  //  prints the document to the console
-  void printDocument() {
-    System.out.println("Document " + id + ":");
-    for (DictionaryWord word : words) {
-      System.out.println();
-      System.out.print(word.word + " || ");
-      for (Posting posting : word.postings) {
-        System.out.print(posting.docID + ": {");
-        System.out.print(posting.postings[0]);
-        for (int i = 1; i<posting.postings.length; i++) {
-          System.out.print(", " + posting.postings[i]);
-        }
-        System.out.print("} | ");
-      }
-    }
-  }
-  
-  //  prints the document as to be displayed
-  void displayDocument() {
-    System.out.println(title + ":");
-    String[] lines = description.split("  ");
-    for (String line : lines)
-    System.out.println(line);
-  }
-}
-
-
-//  dictionary class
-class Dictionary {
-  
-  ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
-  
-  Dictionary() {
-  }
   
   //  integrates the Proper document into the dictionary
-  void addDocument(ProperDocument doc) {
+  static void addDocument(ProperDocument doc) {
     //  scan all dictionary words in doc
     for (DictionaryWord docWord : doc.words) {
       //  check for matching word in dictionary
@@ -534,40 +291,33 @@ class Dictionary {
       }
     }
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  static float inverseDocumentFrequency(DictionaryWord word) {
+    return (float)(Math.log(words.size()/word.totalDocuments()));
+  }
+  
+  static float termFrequency(DictionaryWord word, int docID) {
+    return (float)(Math.log(1 + word.termFrequency(docID)));
+  }
+  
+  static void setWeight(DictionaryWord word, int docID) {
+    float weight = inverseDocumentFrequency(word) * termFrequency(word, docID);
+    word.setWeight(weight, docID);
+  }
+  
+  //  get weights for input document
+  static float weight(DictionaryWord word, int docID) {
+    return word.weight(docID);
+  }
+  
+  
 }
 
-//  stores a word and postings
-class DictionaryWord {
-  
-  String word;
-  
-  ArrayList<Posting> postings = new ArrayList<Posting>();
-  
-  DictionaryWord(String w) {
-    word = w;
-  }
-  
-  void addPosting(Posting p) {
-    postings.add(p);
-  }
-}
-
-//  class for storing postings
-class Posting {
-  
-  int docID;
-  int[] postings;
-  
-  Posting(int id, int[] p) {
-    docID = id;
-    postings = p;
-  }
-  
-  void addPosting(int p) {
-    int[] postings2 = new int[postings.length+1];
-    for (int i = 0; i < postings.length; i++)
-      postings2[i] = postings[i];
-    postings2[postings.length] = p;
-    postings = postings2;
-  }
-}
+//  DictionaryWord stored in main VanillaSystem 

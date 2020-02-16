@@ -83,7 +83,7 @@ class VanillaSystem {
       System.out.println(i);
       documents[i].displayDocument();
     }
-    results = booleanSearchWithQuery("student AND NOT MAT");
+    results = booleanSearchWithQuery("student AND NOT mat");
     for (int i : results)
       System.out.println(i);
     

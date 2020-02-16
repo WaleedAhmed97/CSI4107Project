@@ -513,6 +513,12 @@ class QueryNode {
         parts.remove(i);
       }
     }
+    
+    //  set to lowercase if just the word (casefold)
+    if (type == -1) {
+        parts.add(parts.get(0).toLowerCase());  //  add lower case word
+        parts.remove(0);  //  remove old word
+    }
   }
   
   

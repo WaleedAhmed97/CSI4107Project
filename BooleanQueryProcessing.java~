@@ -4,6 +4,16 @@ import java.io.*;
 //  for query processing
 class BooleanQueryProcessing {
   
+  
+  static Dictionary dictionary;
+  
+  
+  BooleanQueryProcessing(Dictionary d) {
+    dictionary = d;
+  }
+  
+  
+  
   //  used just for testing
   public static void main(String args[]) {
     /*
@@ -38,6 +48,9 @@ class BooleanQueryProcessing {
     System.out.println();
     System.out.println();
     printQueries(processQuery("test OR (effectively OR baccalaureate)"));
+    System.out.println();
+    System.out.println();
+    printQueries(processQuery("(query AND processing)"));
   }
   
   //  returns a list of lists of strings, each list being the a list of Strings for the AND queries
@@ -80,6 +93,31 @@ class BooleanQueryProcessing {
      */
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //  Check all words here for a * and replace them with an OR with all possibilities as under them
+    wildcard(head);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     ArrayList<ArrayList<String>> queries = new ArrayList<ArrayList<String>>();
     //  get queries
     queries = getQueries(head);
@@ -91,6 +129,9 @@ class BooleanQueryProcessing {
      System.out.println();
      System.out.println();
      */
+    
+    //  print out results
+    printQueries(queries);
     
     return queries;
   }
@@ -125,6 +166,9 @@ class BooleanQueryProcessing {
       else
         queries = getQueries(node.children.get(0));
     }
+    
+    //  print out results
+    printQueries(queries);
     
     return queries;
   }
@@ -259,6 +303,121 @@ class BooleanQueryProcessing {
     }
     System.out.print("}");
   }
+  
+  
+  
+  
+  //  wildcard management
+  static void wildcard(QueryNode node) {
+    //  AND or OR node
+    if (node.type != -1) {
+      //  call function on children
+      for (QueryNode child : node.children) {
+        wildcard(child);
+      }
+    }
+    //  otherwise, operate on word
+    else {
+      
+      String word = node.parts.get(0);
+      
+      //  trim !
+      boolean not = false;
+      if (node.parts.get(0).charAt(0) == '!') {
+        not = true;
+        node.parts.add(word.substring(1, word.length()));
+        node.parts.remove(0);
+      }
+      
+      int place = 2;  //  place of * (-1 = beginning, 0 = middle, 1 = end, 2 = nowhere)
+        int spot = 1;  //  spot for middle
+      //  check for * at beginning
+      if (word.charAt(0) == '*') {
+        place = -1;
+      }
+      //  check for * at end
+      else if (word.charAt(word.length()-1) == '*') {
+        place = 1;
+      }
+      //  parse for * in middle
+      else {
+        for (spot = 1; spot < word.length()-1; spot++) {
+          if (word.charAt(spot) == '*') {
+            place = 0;
+            break;
+          }
+        }
+        
+      }
+      
+      //  if no *
+      if (place == 2) {
+        //  add ! back on
+        if (not) {
+          node.parts.add("!" + node.parts.get(0));
+          node.parts.remove(0);
+        }
+      }
+      else {
+//  switch to OR node
+        node.type = 0;
+        //  * at beginning
+        if (place == -1) {
+          //  set word part
+          word = word.substring(1, word.length());
+//  search dictionary for ending and add as children
+          for (DictionaryWord w : dictionary.words) {
+            String dword = w.word;
+            if (dword.length() > word.length()) {  //  check length
+              if (dword.substring(dword.length()-word.length(), dword.length()).equals(word)) {
+                if (not)
+                  node.children.add(new QueryNode("!"+dword, not));
+                else
+                  node.children.add(new QueryNode(dword, not));
+              }
+            }
+          }
+        }
+        //  * at end
+        else if (place == 1) {
+          //  set word part
+          word = word.substring(1, word.length());
+//  search dictionary for ending and add as children
+          for (DictionaryWord w : dictionary.words) {
+            String dword = w.word;
+            if (dword.length() > word.length()) {  //  check length
+              if (dword.substring(0, word.length()).equals(word)) {
+                if (not)
+                  node.children.add(new QueryNode("!"+dword, not));
+                else
+                  node.children.add(new QueryNode(dword, not));
+              }
+            }
+          }
+        }
+        //  * in middle (spot referenced again)
+        else if (place == 0) {
+          //  set word part
+          String wordA = word.substring(0, spot);
+          String wordB = word.substring(spot+1, word.length());
+//  search dictionary for ending and add as children
+          for (DictionaryWord w : dictionary.words) {
+            String dword = w.word;
+            if (dword.length() > wordA.length()+wordB.length()) {  //  check length
+              if (dword.substring(0, wordA.length()).equals(wordA) && dword.substring(dword.length()-wordB.length(), dword.length()).equals(wordB)) {
+                if (not)
+                  node.children.add(new QueryNode("!"+dword, not));
+                else
+                  node.children.add(new QueryNode(dword, not));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  
 }
 
 class QueryNode {
@@ -354,6 +513,13 @@ class QueryNode {
         parts.remove(i);
       }
     }
+  }
+  
+  
+  //  used for adding in words for wildcard management
+  QueryNode(String word, boolean n) {
+    parts.add(word);
+    not = n;
   }
   
 //  prints out the query node structure

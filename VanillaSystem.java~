@@ -2,23 +2,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.*;
 import java.io.FileNotFoundException; 
+import java.lang.Math; 
 
 
 class VanillaSystem {
   
   
   
-  static QueryProcessing queryProcessing = new QueryProcessing();
   
   
-    //  all documents
-   static ProperDocument[] documents;  //  to be initialized after the construction and processing of raw documents
-    
-    
+  //  all documents
+  static ProperDocument[] documents;  //  to be initialized after the construction and processing of raw documents
+  
+  
   
   static char[] punctuation = {'"', '\'', ',', '.', '-', '(', ')', '{', '}', '\\', '/', '=', '+', ';', ':', '|'};  //  used for punctuation removal
   
-  static Dictionary dictionary;
   
   
   /*
@@ -48,175 +47,63 @@ class VanillaSystem {
   
   
   
+  static Dictionary dictionary = new Dictionary(punctuation, stemmingRules);
+  
+  
+  
+  static BooleanQueryProcessing booleanQueryProcessing = new BooleanQueryProcessing(dictionary);
+  static VectorQueryProcessing vectorQueryProcessing = new VectorQueryProcessing();
+  
+  
+  
+  
   public static void main(String args[]) {
     System.out.println("Program test");
     
     //  should print empty line
     System.out.println(("Program test").substring(0, 0));
     
-    queryProcessing.processQuery("test AND (this OR that)");
+    booleanQueryProcessing.processQuery("test AND (this OR that)");
     
     
-    createDictionary();
+    //  dictionary
+    documents = dictionary.createDictionary(documents);
     
     
     //  testing time
     int[] results;
-    results = searchWithQuery("effectively AND NOT baccalaureate");
+    results = booleanSearchWithQuery("effectively AND NOT baccalaureate");
     for (int i : results)
       System.out.println(i);
-    results = searchWithQuery("effectively AND baccalaureate");
+    results = booleanSearchWithQuery("effectively AND baccalaureate");
     for (int i : results)
       System.out.println(i);
-    results = searchWithQuery("effectively");
+    results = booleanSearchWithQuery("effectively");
     for (int i : results) {
       System.out.println(i);
       documents[i].displayDocument();
     }
-    results = searchWithQuery("student AND NOT MAT");
+    results = booleanSearchWithQuery("student AND NOT MAT");
     for (int i : results)
       System.out.println(i);
+    
+    
+    System.out.println(booleanSearchWithQuery("(query OR processing)").length);
+    System.out.println(booleanSearchWithQuery("(query AND processing)").length);
   }
   
-  public static void createDictionary() {
-    
-    
-    //  dictionary
-    dictionary = new Dictionary();
-    
-    
-    
-    //  preprocessing
-    try {
-      //  create arrayList of raw documents (word bags) to be made into a dictionary later
-      ArrayList<RawDocument> rawDocuments = new ArrayList<RawDocument>();
-      boolean french = false;  //  turned on if french and ingores lines
-      int positionCounter = 1;  //  required to keep postition of words between document lines (must be 1 as 1 is subtracted)
-      //  read lines
-      //  source: https://stackoverflow.com/questions/5868369/how-to-read-a-large-text-file-line-by-line-using-java
-      File classes = new File("classes.txt");
-      BufferedReader br = new BufferedReader(new FileReader(classes));
-      String line = br.readLine();  //  get first line
-      while (line != null) {
-        //  process line
-        //  if it detects that the first 3 letters are "ADM", "PSY", or "MAT", it creates a new document starting with that line
-        //  System.out.println(line);
-        if (line.length() > 8)  //  minimum length for course code
-          if (line.substring(0, 3).equals("ADM") || line.substring(0, 3).equals("PSY") || line.substring(0, 3).equals("MAT")) {  //  check for course code beginning
-          //  check if english course
-          if (Character.getNumericValue(line.charAt(5)) < 5) {  //  english section
-            rawDocuments.add(new RawDocument(rawDocuments.size(), line.substring(0, 8)));
-            french = false;  //  set french flag to false
-            positionCounter = 1;  //  reset positionCounter
-          }
-          //  course is french
-          else {
-            french = true;  //  turn french flag on
-          }
-        }
-        
-        //  check if currently english
-        if (!french) {
-          //  cut on spaces
-          String[] words = line.split(" ");
-          //  word/posting object
-          ArrayList<RawDocumentWord> wordPostings = new ArrayList<RawDocumentWord>();
-          //  cycle through words
-          for (int i = 0; i < words.length; i++) {
-            if (words[i].length() > 0) {
-              //  System.out.println(words[i]);
-              words[i] = cleanPunctuation(words[i]);  //  remove punctuation from a word
-              //  System.out.println(words[i]);
-              
-              //  now that all punctuation has bben trimmed, save to wordPostings to preserve posting (as positions will be messed up during stemming)
-              wordPostings.add(new RawDocumentWord(words[i], i+positionCounter-1));
-              
-              //  basic phrase recognition for course codes
-              //  check if the word is a course code; if so, check if next is a number and add as phrase; otherwise, disregard
-              boolean courseCode = false;
-              if (words[i].length() == 3) {  //  minimum length for course code
-                if (words[i].equals("ADM") || words[i].equals("PSY") || words[i].equals("MAT")) {  //  check for course code beginning
-                  //  check if following word is there
-                  if (words.length > i+1)
-                    //  clean next word
-                    words[i+1] = cleanPunctuation(words[i+1]);
-                  //  check if next word is a number
-                  if (isNumber(words[i+1])) {
-                    courseCode = true;  //  set course code flag so as to know not to stem
-                    //  add to current word for phrase treatment
-                    words[i] += words[i+1];
-                    //  wordPostings.get(i).word += words[i+1];  //  modify the word posting as well
-                    wordPostings.add(new RawDocumentWord(words[i], i+positionCounter-1));  //  add course code to posting
-                  }
-                }
-              }
-              
-              //  else, stem
-              if (!courseCode) {
-                
-                //  stemming
-                for (int j = 0; j < stemmingRules.length; j += 2) {
-                  if (words[i].length() > stemmingRules[j].length())  //  check if within length
-                    if (words[i].substring(words[i].length()-stemmingRules[j].length(), words[i].length()).equals(stemmingRules[j]))  //  check for matching ending
-                    wordPostings.add(new RawDocumentWord(words[i].substring(0, words[i].length()-stemmingRules[j].length())+stemmingRules[j+1], i+positionCounter-1));  //  add new wordPosting with same posting position
-                }
-              }
-              
-            }
-            //  otherwise, if a 0 length word was found (likely some double space or punction turned to nothing), then decrement positionCounter so that it will be skipped in the position counting for posting
-            else {
-              positionCounter--;
-            }
-          }
-          //  send off list of words to raw document
-          rawDocuments.get(rawDocuments.size()-1).addWords(wordPostings);
-          
-          //  add line to document
-          rawDocuments.get(rawDocuments.size()-1).addLine(line);
-          
-          //  add length to position counter
-          positionCounter += words.length;
-        }
-        
-        //  get next line
-        line = br.readLine();
-      }
-      
-      
-      
-      //  all documents have been scanned and stored as RawDocuments with RawDocumentWord word/postings
-      //  now, create proper documents from raw documents (RawDocumentWord to DictionaryWord)
-      documents = new ProperDocument[rawDocuments.size()];
-      for (int i = 0; i < rawDocuments.size(); i++) {
-        documents[i] = new ProperDocument(rawDocuments.get(i));
-        //  create dictionary compiling all proper documents
-        dictionary.addDocument(documents[i]);
-      }
-      
-      //  print out document 1 (0)
-      //  documents[0].printDocument();
-      
-      System.out.println();
-      System.out.println();
-      
-      //  print out dictionary
-      System.out.println("Finished constructing dictionary");
-      System.out.println();
-      //  dictionary.printDictionary();
-      
-      
-    }
-    catch (Exception e) {
-      System.out.println("Did not work");
-      System.out.println(e);
-    }
+  
+  void createDictionary() {
+    dictionary = new Dictionary(punctuation, stemmingRules);
+    documents = dictionary.createDictionary(documents);
   }
+  
   
   
   //  an entered query is turned into queries and then queried on the dictionary to turn back relevent pages (array of the document IDs)
-  static int[] searchWithQuery(String query) {
+  static int[] booleanSearchWithQuery(String query) {
     //  get queries
-    ArrayList<ArrayList<String>> queries = queryProcessing.processQuery(query);
+    ArrayList<ArrayList<String>> queries = booleanQueryProcessing.processQuery(query);
     
     //  resulting docs
     ArrayList<Integer> docs = new ArrayList<Integer>();
@@ -320,254 +207,90 @@ class VanillaSystem {
   }
   
   
-  //  cleans punctuation from a word
-  static String cleanPunctuation(String s) {
-    //  back
-    while (punctation(s.charAt(s.length() - 1))) {
-      s = s.substring(0, s.length()-1);
-      //  exit if length is 0
-      if (s.length() == 0)
-        break;
+  
+  //  an entered query is turned into queries and then queried on the dictionary to turn back relevent pages (array of the document IDs)
+  static int[] vectorSearchWithQuery(String query) {
+    //  get queries
+    String[] queries = vectorQueryProcessing.processQuery(query);
+    
+    //  set base weight for compare against
+    float[] baseVector = new float[queries.length];
+    for (int i = 0; i < queries.length; i++) {
+      baseVector[i] = 1;
     }
     
-    //  check if word is empty (as in, it was only punctuation and has been all removed)
-    //  (running further would cause crash)
-    if (s.length() == 0)
-      return s;
     
-    //  front
-    while (punctation(s.charAt(0)))
-      s = s.substring(1, s.length());
-    //  return result
-    return s;
-  }
-  
-  
-  //  function to check if the input character is in the punctuation array
-  static boolean punctation(char c) {
-    for (int i = 0; i < punctuation.length; i++)
-      if (new Character(c).equals(new Character(punctuation[i])))
-      return true;
-    return false;
-  }
-  
-  
-  //  function to check if the input string is a number
-  static boolean isNumber(String s) {
-    char[] numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-    for (int i = 0; i < s.length(); i++) {
-      Character c = new Character(s.charAt(i));
-      boolean charIsNum = false;
-      for (int n = 0; n < numbers.length; n++) {
-        if (!(c.equals(new Character(numbers[n]))))
-          charIsNum = true;
+    //  document weights
+    float[][] weightVectors = new float[documents.length][];
+    for (int i = 0; i < documents.length; i++) {
+      weightVectors[i] = new float[queries.length];
+    }
+    
+    //  resulting weights
+    ArrayList<DocumentWeight> weights = new ArrayList<DocumentWeight>();
+    
+    //  set the weights for each document for all words
+    for (int i = 0; i < documents.length; i++) {
+      for (int j = 0; j < queries.length; j++) {
+        weightVectors[i][j] = dictionary.weight(dictionary.getWord(queries[j]), i);
       }
-      if (!charIsNum)
-        return false;
+      //  normalize vectors
+      //  get total
+      double totalLength = 0;
+      for (int j = 0; j < queries.length; j++) {
+        totalLength += weightVectors[i][j]*weightVectors[i][j];
+      }
+      totalLength = Math.sqrt(totalLength);
+      //  divide by total length
+      for (int j = 0; j < queries.length; j++) {
+         weightVectors[i][j] = weightVectors[i][j]/(float)totalLength;
+      }
+      
+      //  get final weight (dot product)
+      //  as the weights of the base are all 1, the dot product is simply the addition of its wieghts
+      //  overwrite the weightVectors[i][0] for convienence
+      for (int j = 1; j < queries.length; j++) {
+        weightVectors[i][0] += weightVectors[i][j];
+      }
+      //  only add to weights if the weight is greater than 0
+      if (weightVectors[i][0] > 0)
+        weights.add(new DocumentWeight(i, weightVectors[i][0]));
     }
-    return true;
-  }
-}
-
-
-//  stores the bag of words/postings from each line of a document
-class RawDocument {
-  int id;
-  String title;
-  ArrayList<RawDocumentWord> words = new ArrayList<RawDocumentWord>();
-  String description = "";
-  
-  RawDocument(int i, String t) {
-    id = i;
-    title = t;
-    //  System.out.println("Creating course: " + t);
-  }
-  
-  void addWords(ArrayList<RawDocumentWord> w) {
-    for (RawDocumentWord word : w)
-      words.add(word);
-  }
-  void addWords(RawDocumentWord[] w) {
-    for (RawDocumentWord word : w)
-      words.add(word);
-  }
-  void addLine(String line) {
-    description = description + " " + line;
-  }
-}
-
-//  simply stores the word and a posting
-//  required as the stemming duplicates the word, so the position cannot be reliably used for posting position
-class RawDocumentWord {
-  
-  String word;
-  int post;
-  
-  RawDocumentWord(String w, int p) {
-    word = w;
-    post = p;
-  }
-}
-
-//  stores the bag of words/postings from each line of a document
-class ProperDocument {
-  int id;
-  String title;
-  ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
-  String description;
-  
-  ProperDocument(RawDocument doc) {
-    //  set basic info
-    id = doc.id;
-    title = doc.title;
-    description = doc.description;
-    //  System.out.println("Creating proper course: " + title);
-    //  convert RawDocumentWord to Posting
-    //  create single of each
-    for (RawDocumentWord wordPosting : doc.words) {
-      words.add(new DictionaryWord(wordPosting.word));
-      int[] postings = {wordPosting.post};
-      words.get(words.size()-1).addPosting(new Posting(id, postings));
+    
+    Collections.sort(weights);
+    
+    int[] results = new int[Math.min(weights.size(), 15)];
+    for (int i = 0; i < results.length; i++) {
+      results[i] = weights.get(i).docID;
     }
-    //  compound duplicates
-    for (int i = 0; i < words.size(); i++) {
-      for (int j = 0; j < words.size(); j++) {
-        if (i != j) {  //  don't do on same word
-          if (words.get(i).word.compareTo(words.get(j).word) == 0)  {  //  words are identical
-            //  add posting positing to former and remove later
-            words.get(i).postings.get(0).addPosting(words.get(j).postings.get(0).postings[0]);
-            words.remove(j);
-          }
-        }
+    
+    return results;
+  }
+  
+  
+  
+  
+  
+  String[] condense (ArrayList<ArrayList<String>> lists) {
+    ArrayList<String> l = new ArrayList<String>();
+    for (ArrayList<String> list : lists) {
+      for (String s : list) {
+        l.add(s);
       }
     }
-  }
-  
-  //  prints the document to the console
-  void printDocument() {
-    System.out.println("Document " + id + ":");
-    for (DictionaryWord word : words) {
-      System.out.println();
-      System.out.print(word.word + " || ");
-      for (Posting posting : word.postings) {
-        System.out.print(posting.docID + ": {");
-        System.out.print(posting.postings[0]);
-        for (int i = 1; i<posting.postings.length; i++) {
-          System.out.print(", " + posting.postings[i]);
-        }
-        System.out.print("} | ");
+    Collections.sort(l);
+    for (int i = 0; i < l.size()-1; i++) {
+      if (l.get(i).equals(l.get(i+1))) {
+        l.remove(i);
+        i--;
       }
     }
-  }
-  
-  //  prints the document as to be displayed
-  void displayDocument() {
-    System.out.println(title + ":");
-    String[] lines = description.split("  ");
-    for (String line : lines)
-    System.out.println(line);
+    String[] list = new String[l.size()];
+    for (int i = 0; i < l.size(); i++) {
+      list[i] = l.get(i);
+    }
+    return list;
   }
 }
 
 
-//  dictionary class
-class Dictionary {
-  
-  ArrayList<DictionaryWord> words = new ArrayList<DictionaryWord>();
-  
-  Dictionary() {
-  }
-  
-  //  integrates the Proper document into the dictionary
-  void addDocument(ProperDocument doc) {
-    //  scan all dictionary words in doc
-    for (DictionaryWord docWord : doc.words) {
-      //  check for matching word in dictionary
-      boolean foundMatch = false;
-      for (DictionaryWord dicWord : words) {
-        if (docWord.word.compareTo(dicWord.word) == 0) {
-          foundMatch = true;
-          //  add posting
-          dicWord.addPosting(docWord.postings.get(0));
-        }
-      }
-      //  if match could not be found, add (shallow copy of) word to dictionary
-      if (!foundMatch) {
-        DictionaryWord dw = new DictionaryWord(docWord.word);
-        dw.addPosting(docWord.postings.get(0));  //  can do 0 as each document only has 1 posting (containing 1+ positions)
-        words.add(dw);
-      }
-    }
-  }
-  
-  //  returns true if the dictionary contains the input word
-  boolean hasWord(String w) {
-    for (DictionaryWord word : words) {
-      if (word.word.equals(w))
-        return true;
-    }
-    return false;
-  }
-  
-  //  returns the DictionaryWord matching the input word
-  DictionaryWord getWord(String w) {
-    for (DictionaryWord word : words) {
-      if (word.word.equals(w))
-        return word;
-    }
-    return null;
-  }
-  
-  //  prints the dictionary to the console
-  void printDictionary() {
-    System.out.println("Dictionary:");
-    for (DictionaryWord word : words) {
-      System.out.println();
-      System.out.print(word.word + " || ");
-      for (Posting posting : word.postings) {
-        System.out.print(posting.docID + ": {");
-        System.out.print(posting.postings[0]);
-        for (int i = 1; i<posting.postings.length; i++) {
-          System.out.print(", " + posting.postings[i]);
-        }
-        System.out.print("} | ");
-      }
-    }
-  }
-}
-
-//  stores a word and postings
-class DictionaryWord {
-  
-  String word;
-  
-  ArrayList<Posting> postings = new ArrayList<Posting>();
-  
-  DictionaryWord(String w) {
-    word = w;
-  }
-  
-  void addPosting(Posting p) {
-    postings.add(p);
-  }
-}
-
-//  class for storing postings
-class Posting {
-  
-  int docID;
-  int[] postings;
-  
-  Posting(int id, int[] p) {
-    docID = id;
-    postings = p;
-  }
-  
-  void addPosting(int p) {
-    int[] postings2 = new int[postings.length+1];
-    for (int i = 0; i < postings.length; i++)
-      postings2[i] = postings[i];
-    postings2[postings.length] = p;
-    postings = postings2;
-  }
-}
