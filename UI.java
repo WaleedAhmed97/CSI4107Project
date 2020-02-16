@@ -42,7 +42,7 @@ import java.util.ArrayList;
 		        	
 		         String old;
 		          if(word.charAt(0)=='!'){
-		            word=word.substring(1,word.length()-1);
+		            word=word.substring(1,word.length());
 		          }
 		          	old=word;
 		          if(!correct.inDictionary(word)){
@@ -64,6 +64,7 @@ import java.util.ArrayList;
 		     
 		       	
 		         search.setText(info);	
+		         
 		         index=VanillaSystem.booleanSearchWithQuery(info);
 		        
 		   for(int i:index) {
@@ -80,7 +81,7 @@ import java.util.ArrayList;
 		        	
 		         String old;
 		          if(word.charAt(0)=='!'){
-		            word=word.substring(1,word.length()-1);
+		            word=word.substring(1,word.length());
 		          }
 		          	old=word;
 		          if(!correct.inDictionary(word)){
