@@ -18,6 +18,8 @@ class RawDocument {
       title = "PSY" + title.substring(3, title.length());
     else if (title.substring(0, 3).equals("mat"))
       title = "MAT" + title.substring(3, title.length());
+    else if (title.substring(0, 3).equals("csi"))
+      title = "CSI" + title.substring(3, title.length());
     //  System.out.println("Creating course: " + t);
   }
   
