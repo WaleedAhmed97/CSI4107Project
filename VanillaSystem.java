@@ -177,9 +177,11 @@ class VanillaSystem {
         docID = includedWords.get(0).postings.get(dictionaryTrackers[0]).docID;
         int increase = 0;
         for (int i = 1; i < includedWords.size(); i++) {
-          if (docID > includedWords.get(i).postings.get(dictionaryTrackers[i]).docID) {
-            docID = includedWords.get(i).postings.get(dictionaryTrackers[0]).docID;
-            increase = i;
+          if (dictionaryTrackers[i] < includedWords.get(i).postings.size()) {
+            if (docID > includedWords.get(i).postings.get(dictionaryTrackers[i]).docID) {
+              docID = includedWords.get(i).postings.get(dictionaryTrackers[0]).docID;
+              increase = i;
+            }
           }
         }
         dictionaryTrackers[increase]++;
