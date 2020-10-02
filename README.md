@@ -1,5 +1,5 @@
 # Search-Engine-for-UOttawa-Courses
-Search Engine
+
 
 Developed a search engine using two different information retrieval approaches alongside my teammate Josiah.
 
